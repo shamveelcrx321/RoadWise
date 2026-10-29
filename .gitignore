@@ -1,0 +1,19 @@
+# Compiled class files
+out/
+bin/
+*.class
+
+# Sensitive local database credentials
+db.properties
+config.properties
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.eclipse/
+.settings/
+
+# OS generated files
+Thumbs.db
+.DS_Store
