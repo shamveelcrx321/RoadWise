@@ -17,3 +17,31 @@ config.properties
 # OS generated files
 Thumbs.db
 .DS_Store
+
+
+# Java compiled files
+*.class
+out/
+build/
+
+# Local database credentials
+db.properties
+.env
+.env.*
+!.env.example
+*.local.properties
+
+# IDE settings
+.idea/
+.vscode/
+*.iml
+
+# Logs and temporary files
+*.log
+*.tmp
+hs_err_pid*
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
