@@ -446,7 +446,7 @@ public class TrafficManagementFrame extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         txtVehReg     = createInputField("", 12);
-        cmbVehType    = createDropdown(new String[]{"Car", "Motorcycle", "Scooter", "Bus", "Truck", "Auto-Rickshaw", "Other"});
+        cmbVehType    = createDropdown(new String[]{"Select...", "Car", "Motorcycle", "Scooter", "Bus", "Truck", "Auto-Rickshaw", "Other"});
         cmbVehType.setPreferredSize(new Dimension(140, 28));
         txtVehDriver  = createInputField("", 16);
         txtVehLicense = createInputField("", 14);
@@ -557,22 +557,30 @@ public class TrafficManagementFrame extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         cmbViolVehicle  = new JComboBox<>();
+        cmbViolVehicle.addItem(new VehicleComboItem(0, "Select...", ""));
         cmbViolVehicle.setPreferredSize(new Dimension(200, 28));
         styleDropdownComponent(cmbViolVehicle);
 
-        cmbViolType     = createDropdown(Violation.CATEGORIES);
+        List<String> typeOpts = new ArrayList<>();
+        typeOpts.add("Select...");
+        typeOpts.addAll(Arrays.asList(Violation.CATEGORIES));
+        cmbViolType     = createDropdown(typeOpts.toArray(new String[0]));
         cmbViolType.setPreferredSize(new Dimension(190, 28));
 
-        txtViolDateTime = createInputField(new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()), 14);
-        txtViolFine     = createInputField("1500", 8);
-        cmbViolPayment  = createDropdown(new String[]{"UNPAID", "PAID"});
+        txtViolDateTime = createInputField("", 14);
+        txtViolFine     = createInputField("", 8);
+        cmbViolPayment  = createDropdown(new String[]{"Select...", "UNPAID", "PAID"});
         cmbViolPayment.setPreferredSize(new Dimension(100, 28));
 
         txtViolDesc     = createInputField("", 20);
 
         cmbViolType.addActionListener(e -> {
             String cat = (String) cmbViolType.getSelectedItem();
-            if (cat != null) txtViolFine.setText(String.valueOf((int) Violation.getDefaultFine(cat)));
+            if (cat != null && !"Select...".equals(cat)) {
+                txtViolFine.setText(String.valueOf((int) Violation.getDefaultFine(cat)));
+            } else {
+                txtViolFine.setText("");
+            }
         });
 
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 1; gbc.weightx = 0.35;
@@ -714,10 +722,10 @@ public class TrafficManagementFrame extends JFrame {
         JPanel inputsRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 2));
         inputsRow.setOpaque(false);
 
-        txtNorth = createInputField("35", 5);
-        txtSouth = createInputField("20", 5);
-        txtEast  = createInputField("45", 5);
-        txtWest  = createInputField("15", 5);
+        txtNorth = createInputField("", 5);
+        txtSouth = createInputField("", 5);
+        txtEast  = createInputField("", 5);
+        txtWest  = createInputField("", 5);
         txtNorth.setPreferredSize(new Dimension(65, 28));
         txtSouth.setPreferredSize(new Dimension(65, 28));
         txtEast.setPreferredSize(new Dimension(65, 28));
@@ -754,10 +762,10 @@ public class TrafficManagementFrame extends JFrame {
         resultsGrid.setOpaque(false);
         resultsGrid.setBorder(new EmptyBorder(6, 0, 6, 0));
 
-        lblTimingNorth = new JLabel("30s", SwingConstants.CENTER);
-        lblTimingSouth = new JLabel("30s", SwingConstants.CENTER);
-        lblTimingEast  = new JLabel("30s", SwingConstants.CENTER);
-        lblTimingWest  = new JLabel("30s", SwingConstants.CENTER);
+        lblTimingNorth = new JLabel("-", SwingConstants.CENTER);
+        lblTimingSouth = new JLabel("-", SwingConstants.CENTER);
+        lblTimingEast  = new JLabel("-", SwingConstants.CENTER);
+        lblTimingWest  = new JLabel("-", SwingConstants.CENTER);
 
         resultsGrid.add(createDirectionalBadge("North Approach", lblTimingNorth));
         resultsGrid.add(createDirectionalBadge("South Approach", lblTimingSouth));
@@ -845,8 +853,11 @@ public class TrafficManagementFrame extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         txtAccLocation = createInputField("", 16);
-        txtAccDateTime = createInputField(new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()), 14);
-        cmbAccSeverity = createDropdown(Accident.SEVERITY_LEVELS);
+        txtAccDateTime = createInputField("", 14);
+        List<String> sevOpts = new ArrayList<>();
+        sevOpts.add("Select...");
+        sevOpts.addAll(Arrays.asList(Accident.SEVERITY_LEVELS));
+        cmbAccSeverity = createDropdown(sevOpts.toArray(new String[0]));
         cmbAccSeverity.setPreferredSize(new Dimension(140, 28));
         txtAccDesc     = createInputField("", 20);
 
@@ -960,6 +971,7 @@ public class TrafficManagementFrame extends JFrame {
         topCard.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 4));
 
         cmbRiskVehicle = new JComboBox<>();
+        cmbRiskVehicle.addItem(new VehicleComboItem(0, "Select...", ""));
         cmbRiskVehicle.setPreferredSize(new Dimension(280, 28));
         styleDropdownComponent(cmbRiskVehicle);
 
@@ -1362,6 +1374,9 @@ public class TrafficManagementFrame extends JFrame {
         String contact = txtVehContact.getText().trim();
 
         try {
+            if (type == null || "Select...".equals(type) || type.trim().isEmpty()) {
+                throw new IllegalArgumentException("Please select a vehicle type from the dropdown.");
+            }
             Vehicle.validate(reg, driver, lic);
 
             if (selectedVehicleId == -1) {
@@ -1538,8 +1553,14 @@ public class TrafficManagementFrame extends JFrame {
         String desc = txtViolDesc.getText().trim();
 
         try {
-            if (item == null) {
-                throw new IllegalArgumentException("A registered vehicle must be selected.");
+            if (item == null || item.vehicleId <= 0) {
+                throw new IllegalArgumentException("Please select a registered vehicle from the dropdown.");
+            }
+            if (type == null || "Select...".equals(type) || type.trim().isEmpty()) {
+                throw new IllegalArgumentException("Please select a violation category from the dropdown.");
+            }
+            if (status == null || "Select...".equals(status) || status.trim().isEmpty()) {
+                throw new IllegalArgumentException("Please select a payment status (UNPAID or PAID).");
             }
 
             double fine;
@@ -1617,7 +1638,7 @@ public class TrafficManagementFrame extends JFrame {
 
         for (int i = 0; i < cmbViolVehicle.getItemCount(); i++) {
             VehicleComboItem it = cmbViolVehicle.getItemAt(i);
-            if (it.regNumber.equalsIgnoreCase(reg)) {
+            if (it != null && it.vehicleId > 0 && it.regNumber.equalsIgnoreCase(reg)) {
                 cmbViolVehicle.setSelectedIndex(i);
                 break;
             }
@@ -1663,22 +1684,35 @@ public class TrafficManagementFrame extends JFrame {
         selectedViolationId = -1;
         if (cmbViolVehicle.getItemCount() > 0) cmbViolVehicle.setSelectedIndex(0);
         cmbViolType.setSelectedIndex(0);
-        txtViolDateTime.setText(new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()));
-        txtViolFine.setText(String.valueOf((int) Violation.getDefaultFine((String) cmbViolType.getSelectedItem())));
+        txtViolDateTime.setText("");
+        txtViolFine.setText("");
         cmbViolPayment.setSelectedIndex(0);
         txtViolDesc.setText("");
     }
 
     private void calculateSignalTiming() {
         try {
+            String sn = txtNorth.getText().trim();
+            String ss = txtSouth.getText().trim();
+            String se = txtEast.getText().trim();
+            String sw = txtWest.getText().trim();
+
+            if (sn.isEmpty() || ss.isEmpty() || se.isEmpty() || sw.isEmpty()) {
+                throw new IllegalArgumentException("All four directional counts (North, South, East, West) must be entered.");
+            }
+
             int n, s, e, w;
             try {
-                n = Integer.parseInt(txtNorth.getText().trim());
-                s = Integer.parseInt(txtSouth.getText().trim());
-                e = Integer.parseInt(txtEast.getText().trim());
-                w = Integer.parseInt(txtWest.getText().trim());
+                n = Integer.parseInt(sn);
+                s = Integer.parseInt(ss);
+                e = Integer.parseInt(se);
+                w = Integer.parseInt(sw);
             } catch (NumberFormatException nfe) {
-                throw new IllegalArgumentException("Directional counts must be valid integers.");
+                throw new IllegalArgumentException("Directional counts must be valid non-negative integers.");
+            }
+
+            if (n < 0 || s < 0 || e < 0 || w < 0) {
+                throw new IllegalArgumentException("Vehicle counts cannot be negative numbers.");
             }
 
             lastSignalResult = TrafficAlgorithm.calculate(n, s, e, w);
@@ -1843,6 +1877,9 @@ public class TrafficManagementFrame extends JFrame {
         String desc = txtAccDesc.getText().trim();
 
         try {
+            if (sev == null || "Select...".equals(sev) || sev.trim().isEmpty()) {
+                throw new IllegalArgumentException("Please select an accident severity level from the dropdown.");
+            }
             Accident.validate(loc, dt);
 
             if (selectedAccidentId == -1) {
@@ -1918,7 +1955,7 @@ public class TrafficManagementFrame extends JFrame {
     private void clearAccidentForm() {
         selectedAccidentId = -1;
         txtAccLocation.setText("");
-        txtAccDateTime.setText(new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()));
+        txtAccDateTime.setText("");
         cmbAccSeverity.setSelectedIndex(0);
         txtAccDesc.setText("");
     }
@@ -1927,7 +1964,7 @@ public class TrafficManagementFrame extends JFrame {
         VehicleComboItem item = (VehicleComboItem) cmbRiskVehicle.getSelectedItem();
 
         try {
-            if (item == null) {
+            if (item == null || item.vehicleId <= 0) {
                 throw new IllegalArgumentException("Please select a registered vehicle from the dropdown.");
             }
 
@@ -1972,6 +2009,7 @@ public class TrafficManagementFrame extends JFrame {
         }
 
         @Override public String toString() {
+            if (vehicleId <= 0) return "Select...";
             return regNumber + "  -  " + driverName;
         }
     }
@@ -1979,10 +2017,14 @@ public class TrafficManagementFrame extends JFrame {
     private void populateVehicleDropdowns(List<Vehicle> list) {
         cmbViolVehicle.removeAllItems();
         cmbRiskVehicle.removeAllItems();
-        for (Vehicle v : list) {
-            VehicleComboItem item = new VehicleComboItem(v.getId(), v.getRegistrationNumber(), v.getDriverName());
-            cmbViolVehicle.addItem(item);
-            cmbRiskVehicle.addItem(item);
+        cmbViolVehicle.addItem(new VehicleComboItem(0, "Select...", ""));
+        cmbRiskVehicle.addItem(new VehicleComboItem(0, "Select...", ""));
+        if (list != null) {
+            for (Vehicle v : list) {
+                VehicleComboItem item = new VehicleComboItem(v.getId(), v.getRegistrationNumber(), v.getDriverName());
+                cmbViolVehicle.addItem(item);
+                cmbRiskVehicle.addItem(item);
+            }
         }
     }
 
@@ -2297,14 +2339,17 @@ public class TrafficManagementFrame extends JFrame {
     }
 
     private void showSuccess(String msg) {
+        if (Boolean.getBoolean("test.suppressDialogs")) return;
         JOptionPane.showMessageDialog(this, msg, "Information", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void showError(String msg) {
+        if (Boolean.getBoolean("test.suppressDialogs")) return;
         JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
     private void showWarning(String msg) {
+        if (Boolean.getBoolean("test.suppressDialogs")) return;
         JOptionPane.showMessageDialog(this, msg, "Validation Notice", JOptionPane.WARNING_MESSAGE);
     }
 
